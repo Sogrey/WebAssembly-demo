@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>AssemblyScript-demo</title>
+    <!-- <script type="module">
+        import {   add,  sub,  mul,  div,
+  mod,  floor,  ceil,  round,  abs,  min,  max,test1 } from "./build/release.js";
+document.body.innerText = add(1, 2);
+</script> -->
+
+    <script type="text/javascript" src="./build/release.umd.js"></script>
+    <script>
+        function fib(n) {
+            if (n < 2) {
+                return 1
+            }
+            return fib(n - 2) + fib(n - 1)
+        }
+
+        console.time('javascript');
+        let x = fib(40);
+        console.log(x);
+        console.timeEnd('javascript');
+    </script>
+
+</head>
+
+<body></body>
+
+</html>

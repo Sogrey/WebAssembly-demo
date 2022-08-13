@@ -1,5 +1,4 @@
-# WebAssembly-demo
-
-
-
-来自： https://www.jianshu.com/p/ab9afca8b7a8
+npm init -y
+npm install --save @assemblyscript/loader
+npm install --save-dev assemblyscript
+npx asinit .
