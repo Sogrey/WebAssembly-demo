@@ -76,7 +76,7 @@ const getExportFunctionPromise = function (url) {
 const wasmUrl = wasmPath;
 getExportFunctionPromise(wasmUrl)
     .then(result => {
-        console.log(result)
+        // console.log(result)
 
         // console.log(result.add, result.add(89, 20));
         // console.log(result.sub, result.sub(89, 20));
@@ -96,7 +96,7 @@ getExportFunctionPromise(wasmUrl)
 
 getExportFunctionPromise("./build/fib_cpp.wasm")
     .then(result => {
-        console.log(result)
+        // console.log(result)
 
         // console.log(result.add, result.add(89, 20));
         // console.log(result.sub, result.sub(89, 20));
@@ -114,9 +114,30 @@ getExportFunctionPromise("./build/fib_cpp.wasm")
         console.error(error)
     });
 
+getExportFunctionPromise("./build/fib_cpp1.wasm")
+    .then(result => {
+        // console.log(result)
+
+        // console.log(result.add, result.add(89, 20));
+        // console.log(result.sub, result.sub(89, 20));
+        // console.log(result.mul, result.mul(89, 20));
+        // console.log(result.div, result.div(89, 20));
+
+
+        console.time('wasm cpp1');
+        let x = result.fib(40);
+        console.log(x);
+        console.log(result.add(520, 1314));
+        console.timeEnd('wasm cpp1');
+
+    })
+    .catch(error => {
+        console.error(error)
+    });
+
 getExportFunctionPromise("./build/fib_c.wasm")
     .then(result => {
-        console.log(result)
+        // console.log(result)
 
         // console.log(result.add, result.add(89, 20));
         // console.log(result.sub, result.sub(89, 20));
@@ -132,3 +153,22 @@ getExportFunctionPromise("./build/fib_c.wasm")
     .catch(error => {
         console.error(error)
     });
+
+let importObject = {};
+
+// 異步邊下載邊編譯 WASM 檔案
+WebAssembly.compileStreaming(fetch("./build/fib_c.wasm"))
+    .then(module => {
+        // 得到 WebAssembly.Module
+        // console.log(module);
+
+        let instance = new WebAssembly.Instance(module, importObject);
+
+        // console.log(instance);
+
+        console.time('wasm c | compileStreaming');
+        let x = instance.exports.fib(40);
+        console.log(x);
+        console.timeEnd('wasm c | compileStreaming');
+
+    })

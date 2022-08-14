@@ -28,6 +28,15 @@ gulp.task("test", function (cb) {
             }
         });
 
+        exec('emcc -Os -s INITIAL_MEMORY=64kb -s MAXIMUM_MEMORY=64kb -s ALLOW_MEMORY_GROWTH=0 -s TOTAL_STACK=0kb -s STANDALONE_WASM -s EXPORTED_FUNCTIONS="[\'_fib\',\'_add\']" -Wl,--no-entry "test-comparison/fib_cpp.cc" "test-comparison/fib_cpp1.cc" -o "build/fib_cpp1.wasm"', function (error, stdout, stderr) {
+            if (error) {
+                console.error('error: ' + error);
+                return;
+            } else {
+                console.log("执行完毕。",'build/fib_cpp1.wasm');
+            }
+        });
+
         exec('emcc test-comparison/fib_c.c -Os -s WASM=1 -s SIDE_MODULE=1 -o build/fib_c.wasm', function (error, stdout, stderr) {
             if (error) {
                 console.error('error: ' + error);
