@@ -172,3 +172,80 @@ WebAssembly.compileStreaming(fetch("./build/fib_c.wasm"))
         console.timeEnd('wasm c | compileStreaming');
 
     })
+
+// WebAssembly.compileStreaming(fetch("./out/downloadFile.wasm"))
+//     .then(module => {
+//         // 得到 WebAssembly.Module
+//         console.log(module);
+
+//         // Uncaught (in promise) RangeError: WebAssembly.Instance is disallowed on the main thread, if the buffer size is larger than 4KB. Use WebAssembly.instantiate.
+
+//         let instance = WebAssembly.instantiate(module, importObject);
+
+//         console.log(instance);
+
+//         // console.time('wasm c | compileStreaming');
+//         // let x = instance.exports.fib(40);
+//         // console.log(x);
+//         // console.timeEnd('wasm c | compileStreaming');
+
+//     })
+
+
+// 封装 WebAssembly 模块的读取函数
+async function wasmBrowserInstantiate(
+    wasmModuleUrl,
+    importObject
+) {
+    let response
+
+    // 传入的 importObject 需要提供 env.abort() 方法
+    if (typeof importObject?.env?.abort !== 'function') {
+        importObject = Object.assign({}, importObject, {
+            env: {
+                abort: () => console.log('Abort!'),
+                emscripten_is_main_browser_thread: () => console.log('Abort!'),
+                emscripten_start_fetch: () => console.log('Abort!'),
+                _emscripten_fetch_free: () => console.log('Abort!'),
+                emscripten_memcpy_big: () => console.log('Abort!'),
+                emscripten_resize_heap: () => console.log('Abort!'),
+                setTempRet0: () => console.log('Abort!'),
+                consoleLog: () => console.log,
+                emscripten_run_script: (script) => {
+                    eval(script)
+                    console.log(script.toString());
+                },
+            },
+            wasi_snapshot_preview1: {
+                proc_exit: () => { },
+                fd_write: () => { },
+            }
+        })
+    }
+
+    // 判断是否支持 streaming instantiation
+    if (WebAssembly.instantiateStreaming) {
+        // 请求模块然后初始化
+        response = await WebAssembly.instantiateStreaming(
+            fetch(wasmModuleUrl),
+            importObject
+        )
+    } else {
+        // 不支持要 fallback，手动转成 Buffer
+        const fetchAndInstantiateTask = async () => {
+            const wasmArrayBuffer = await fetch(wasmModuleUrl).then((response) =>
+                response.arrayBuffer()
+            )
+            return WebAssembly.instantiate(wasmArrayBuffer, importObject)
+        }
+        response = await fetchAndInstantiateTask()
+    }
+
+    return response;
+}
+
+// 解析后的 wasm 模块
+wasmBrowserInstantiate("./out/downloadFile.wasm").then((response) => {
+    console.log(response);
+    response.instance.exports.download("data/myfile.dat")
+});
