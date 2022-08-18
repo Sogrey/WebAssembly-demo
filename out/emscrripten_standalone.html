@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>emscrripten_standalone</title>
+</head>
+
+<body>
+    <script>
+        fetch('emscrripten_standalone.wasm')
+            .then(response => response.arrayBuffer())
+            .then(bytes => WebAssembly
+                .instantiate(bytes, {
+                    env: {
+                        memoryBase: 0,
+                        tableBase: 0,
+                        table: new WebAssembly.Table({
+                            initial: 2,
+                            element: 'anyfunc'
+                        }),
+                        memory: new WebAssembly.Memory({
+                            initial: 256,
+                            maximum: 256
+                        }),
+                        abort: function (msg) {
+                            console.error('abort', msg);
+                        }
+                    }
+                })).then(results => {
+                const instance = results.instance;
+                const exports = instance.exports;
+                const add = exports['add'];
+                console.log(add(520, 1314));
+            });
+    </script>
+</body>
+
+</html>

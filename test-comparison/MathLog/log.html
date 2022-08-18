@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- https://stackoverflow.com/questions/44097584/webassembly-linkerror-function-import-requires-a-callable -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Log</title>
+</head>
+
+<body>
+    <script>
+        function loadWebAssembly(filename, imports = {}) {
+            return fetch(filename)
+                .then((response) => response.arrayBuffer())
+                .then((buffer) => WebAssembly.compile(buffer))
+                .then((module) => {
+                    imports.env = imports.env || {}
+                    Object.assign(imports.env, {
+                        memoryBase: 0,
+                        tableBase: 0,
+                        memory: new WebAssembly.Memory({
+                            initial: 256,
+                            maximum: 512,
+                        }),
+                        table: new WebAssembly.Table({
+                            initial: 0,
+                            maximum: 0,
+                            element: 'anyfunc',
+                        }),
+                        log: Math.log, // <===== 在 imports.env 中提供 log() 的实现
+                    })
+                    return new WebAssembly.Instance(module, imports)
+                })
+        }
+        const instance = loadWebAssembly('./log.wasm');
+        console.log(instance);
+        instance.then((result) => {
+            console.log(result);
+            console.log(result.exports.test);
+            console.log(result.exports.test(2));
+        }).catch((error) => {
+            console.log(error);
+        });
+    </script>
+</body>
+
+</html>

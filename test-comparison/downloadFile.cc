@@ -39,7 +39,7 @@ extern "C"
 {
     void EMSCRIPTEN_KEEPALIVE download(const char *url)
     {
-        emscripten_run_script("console.log('1111')");
+        // emscripten_run_script("console.log('1111')");
 
         EM_ASM({
             console.log('I received: ' + [ $0, $1 ]);

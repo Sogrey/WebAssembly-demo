@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared</title>
+</head>
+
+<body>
+    <script type="text/javascript">
+        (async function () {
+            function AsciiToString(ptr, heapu8) {
+                let str = '';
+
+                while (1) {
+                    let ch = heapu8[ptr++];
+                    if (!ch) return str;
+                    str += String.fromCharCode(ch);
+                }
+            }
+
+            const resp = await fetch(`./index.wasm?t=${Date.now()}`);
+            const bytes = await resp.arrayBuffer();
+            const {
+                instance
+            } = await WebAssembly.instantiate(bytes, {
+                env: {},
+            });
+
+            const str = "Hello, From JS";
+            const str_ptr = instance.exports.malloc(str.length);
+            const HEAP8 = new Int8Array(instance.exports.memory.buffer);
+
+            // 1 byte 1 byte 的形式去内存中设置值，直接修改 wasm 内存数据
+            str.split('').forEach((char, index) => {
+                HEAP8[(str_ptr + index) >> 0] = char.charCodeAt(0);
+            });
+
+            // 传递指针, js 向 wasm 赋值
+            instance.exports.set_str_from_js(str_ptr);
+            // 获取值。 js 获取 wasm 内存数据
+            const str_ptr_from_wasm = instance.exports.get_str_from_js();
+            const str_from_wasm = AsciiToString(str_ptr_from_wasm, HEAP8);
+
+            console.log(str_from_wasm); // "Hello, From JS"
+
+        })().catch(err => console.error(err));
+    </script>
+</body>
+
+</html>

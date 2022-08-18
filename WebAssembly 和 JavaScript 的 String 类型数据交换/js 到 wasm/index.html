@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared</title>
+</head>
+
+<body>
+    <script type="text/javascript">
+        (async function () {
+            function AsciiToString(ptr, heapu8) {
+                let str = '';
+
+                while (1) {
+                    let ch = heapu8[ptr++];
+                    if (!ch) return str;
+                    str += String.fromCharCode(ch);
+                }
+            }
+
+            const resp = await fetch(`./index.wasm?t=${Date.now()}`);
+            const bytes = await resp.arrayBuffer();
+            const {
+                instance
+            } = await WebAssembly.instantiate(bytes, {
+                env: {},
+            });
+            // 结构化数据
+            const HEAP8 = new Int8Array(instance.exports.memory.buffer);
+
+            // get string from wasm
+            const wasm_str_ptr = instance.exports.get_str_from_wasm();
+            const wasm_str = AsciiToString(wasm_str_ptr, HEAP8);
+
+            console.log(wasm_str); //Hello, From WASM
+        })().catch(err => console.error(err));
+    </script>
+</body>
+
+</html>
